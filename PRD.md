@@ -6,10 +6,38 @@ after it detects a change in the display configuration. When the display configu
 restored, the windows that were moved or resized are not always restored to their positions
 before the display configuration change.
 
-dSnap helps with this problem by tracking the position and size of all open windows and associating
+dSnap helps with this problem by tracking the position and size of all open Chrome windows and associating
 this with the current display configuration, and taking periodic snapshots of the window layout for
 the current display configuration. When a change in display configuration is detected, dSnap
 allows the user to restore a previously saved window layout.
+
+## Technical Specifications
+
+### Window Scope
+dSnap tracks only Chrome browser windows, as Chrome extension APIs can only access and control Chrome windows.
+
+### Display Configuration Identity
+Display configurations are uniquely identified by:
+- Number of displays
+- Dimensions of each display
+- Relative position of each display
+- Primary display designation
+
+### Window Layout Tracking
+- The current window layout is updated in real-time whenever windows are created, removed, moved, or resized
+- Periodic snapshots of the current layout are automatically taken every minute
+- Snapshots are only created for the current display configuration
+
+### Snapshot Retention
+- Maximum of 5 snapshots are kept per display configuration
+- Older snapshots are automatically deleted when the limit is reached
+- Snapshots include timestamp for identification
+
+### Window Restoration
+- When applying a snapshot, only windows that still exist are restored to their saved bounds
+- Windows that no longer exist are ignored
+- New windows not in the snapshot are left unchanged
+- Minimized windows are restored to their state as of the snapshot
 
 # Central UI
 
@@ -41,8 +69,7 @@ snapshots to see the layout, so they can make the right choice of what layout sn
 ## Cardinality Estimates
 
 It is only expected that there will be at most 3 or 4 different display configurations for a user,
-and we need only maintain a few window layout snapshots (maybe 3) per display configuration.
-So a reasonable display
+and we maintain up to 5 window layout snapshots per display configuration.
 
 ## Rough UI
 
