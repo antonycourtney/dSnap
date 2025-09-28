@@ -1,0 +1,7 @@
+.popup {
+  width: 200px;
+  padding: 20px;
+  text-align: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #333;
+}
