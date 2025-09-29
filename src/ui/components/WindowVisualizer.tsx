@@ -21,13 +21,11 @@ export const WindowVisualizer: React.FC<WindowVisualizerProps> = ({
   const normalizedDisplays = normalizeDisplayPositions(displays);
   const scale = calculateScaleFactor(normalizedDisplays, width, height);
 
-  // Calculate display bounds for clipping
-  let minX = 0, minY = 0;
-  let maxX = 0, maxY = 0;
-
-  normalizedDisplays.forEach(display => {
-    maxX = Math.max(maxX, display.bounds.left + display.bounds.width);
-    maxY = Math.max(maxY, display.bounds.top + display.bounds.height);
+  // Calculate the original display bounds before normalization for window positioning
+  let originalMinX = Infinity, originalMinY = Infinity;
+  displays.forEach(display => {
+    originalMinX = Math.min(originalMinX, display.bounds.left);
+    originalMinY = Math.min(originalMinY, display.bounds.top);
   });
 
   return (
@@ -41,7 +39,7 @@ export const WindowVisualizer: React.FC<WindowVisualizerProps> = ({
           key={display.id}
           className={cn(
             "absolute border bg-gray-100",
-            display.isPrimary ? "border-blue-400" : "border-gray-300"
+            display.isPrimary ? "border-blue-400 border-2" : "border-gray-300"
           )}
           style={{
             left: `${display.bounds.left * scale + 10}px`,
@@ -52,7 +50,7 @@ export const WindowVisualizer: React.FC<WindowVisualizerProps> = ({
         />
       ))}
 
-      {/* Render windows */}
+      {/* Render windows overlaid on displays */}
       {windows.map((window) => {
         if (
           window.bounds.left === undefined ||
@@ -63,31 +61,47 @@ export const WindowVisualizer: React.FC<WindowVisualizerProps> = ({
           return null;
         }
 
-        // Normalize window position relative to display bounds
-        const windowLeft = window.bounds.left - minX;
-        const windowTop = window.bounds.top - minY;
+        // Normalize window position relative to the same origin as displays
+        const normalizedWindowLeft = window.bounds.left - originalMinX;
+        const normalizedWindowTop = window.bounds.top - originalMinY;
 
         return (
           <div
             key={window.id}
             className={cn(
-              "absolute border-2 rounded shadow-sm",
+              "absolute border-2 rounded shadow-sm z-10",
               window.state === 'minimized'
-                ? "bg-gray-400 opacity-50 border-gray-500"
+                ? "bg-yellow-200 opacity-70 border-yellow-500"
                 : window.state === 'maximized'
-                ? "bg-blue-200 border-blue-500"
-                : "bg-white border-gray-400"
+                ? "bg-green-200 opacity-80 border-green-500"
+                : "bg-blue-200 opacity-80 border-blue-500"
             )}
             style={{
-              left: `${windowLeft * scale + 10}px`,
-              top: `${windowTop * scale + 10}px`,
+              left: `${normalizedWindowLeft * scale + 10}px`,
+              top: `${normalizedWindowTop * scale + 10}px`,
               width: `${window.bounds.width * scale}px`,
               height: `${window.bounds.height * scale}px`,
             }}
-            title={`Window ${window.id} (${window.state})`}
+            title={`Window ${window.id} (${window.state}) - ${window.bounds.width}×${window.bounds.height}`}
           />
         );
       })}
+
+      {/* Legend */}
+      <div className="absolute bottom-2 right-2 bg-white bg-opacity-90 p-2 rounded text-xs space-y-1">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-2 bg-blue-200 border border-blue-500 rounded"></div>
+          <span>Normal</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-2 bg-green-200 border border-green-500 rounded"></div>
+          <span>Maximized</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-2 bg-yellow-200 border border-yellow-500 rounded"></div>
+          <span>Minimized</span>
+        </div>
+      </div>
     </div>
   );
 };
